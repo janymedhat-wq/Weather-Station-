@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Station System Documentation</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // No custom theme colors in Tailwind config, we'll use CSS variables for theme switching
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        // Use the Inter font for titles, but keep the monospaced font for the body
+                        'title': ['Inter', 'sans-serif'],
+                        'mono': ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Define the default (Light) theme colors using CSS variables */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --secondary-bg: #f5f5f5; /* Off-white for section backgrounds */
+            --border-color: #000000;
+            --code-text: #000000; /* Pure Black for code in light mode */
+            --highlight-color: #3b82f6; /* Blue for emphasis (updated for weather theme) */
+        }
+
+        /* Define the Dark theme colors */
+        [data-theme="dark"] {
+            --bg-color: #000000;
+            --text-color: #ffffff;
+            --secondary-bg: #111111; /* Dark gray/black for section backgrounds */
+            --border-color: #ffffff;
+            --code-text: #ffffff; /* Pure White for code in dark mode */
+            --highlight-color: #60a5fa; /* Brighter blue for emphasis */
+        }
+
+        /* Apply the clean, monospaced font to the entire body and enable smooth transition */
+        body {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Courier New', monospace;
+            text-transform: uppercase;
+            line-height: 1.6;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            /* Smooth color transition for a clean theme change */
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+
+        /* Use variables for border colors */
+        .hr-separator {
+            border-top: 2px solid var(--border-color);
+        }
+        .code-block {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 2px solid var(--border-color);
+            padding: 1.5rem;
+            line-height: 1.5;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            background-color: var(--secondary-bg); /* Use secondary BG for code block */
+            color: var(--code-text); /* Code text color */
+        }
+
+        /* Custom scrollbar using theme variables */
+        .code-block::-webkit-scrollbar { width: 8px; }
+        .code-block::-webkit-scrollbar-thumb {
+            background-color: var(--border-color);
+            border-radius: 0;
+        }
+        .code-block::-webkit-scrollbar-track {
+            background-color: var(--secondary-bg);
+        }
+
+        /* Responsive Iframe container with a strong border */
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            border: 4px solid var(--border-color);
+        }
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Component box styling */
+        .component-box {
+            padding: 0.5rem;
+            border: 4px solid var(--border-color);
+            background-color: var(--secondary-bg);
+            transition: background-color 0.5s ease;
+        }
+        .text-default {
+            color: var(--text-color);
+        }
+        .bg-default-button {
+            background-color: var(--border-color);
+            color: var(--bg-color);
+        }
+        .border-default {
+            border-color: var(--border-color);
+        }
+        .highlight-text {
+            color: var(--highlight-color);
+        }
+    </style>
+</head>
+<body data-theme="dark" class="min-h-screen p-6 sm:p-12 md:p-16">
+
+    <!-- Main Content Container (Centered and Max Width) -->
+    <div class="max-w-5xl mx-auto space-y-16 sm:space-y-24">
+
+        <!-- Header and Introduction Section -->
+        <header class="text-center py-8">
+            <h1 class="font-title text-5xl sm:text-7xl md:text-8xl font-extrabold mb-10 tracking-widest leading-none text-default">
+                WEATHER STATION SYSTEM
+            </h1>
+            <p class="text-base sm:text-lg leading-relaxed max-w-3xl mx-auto border-default border-t-2 border-b-2 py-5 px-2" style="color: var(--text-color); opacity: 0.7;">
+                THIS DOCUMENTATION DETAILS THE WEATHER STATION SYSTEM PROJECT, WHICH UTILIZES THE <span class="highlight-text">DHT22 SENSOR</span> TO ACCURATELY MEASURE AND LOG ENVIRONMENTAL <span class="highlight-text">TEMPERATURE AND HUMIDITY</span> DATA.
+            </p>
+        </header>
+
+        <!-- Navigation Links and Theme Toggle (Learnings link removed) -->
+        <nav class="flex flex-wrap justify-center items-center space-x-8 sm:space-x-16 text-xl font-bold">
+            <a href="#code" class="p-3 hover:opacity-70 transition duration-300 ease-in-out hover:scale-105 active:scale-95 underline underline-offset-4" style="color: var(--text-color);">
+                CODE
+            </a>
+            <a href="#video" class="p-3 hover:opacity-70 transition duration-300 ease-in-out hover:scale-105 active:scale-95 underline underline-offset-4" style="color: var(--text-color);">
+                VIDEO
+            </a>
+            <!-- THEME TOGGLE BUTTON -->
+            <button id="themeToggleBtn" onclick="toggleTheme()" class="p-3 text-sm font-bold border-2 border-default transition duration-300 ease-in-out hover:scale-105 active:scale-95 hover:bg-opacity-80" style="color: var(--text-color); border-color: var(--border-color);">
+                DARK / LIGHT
+            </button>
+        </nav>
+
+        <!-- Horizontal Rule Separator -->
+        <hr class="hr-separator my-10">
+
+        <!-- CODE Section -->
+        <section id="code" class="p-2 sm:p-0">
+            <h2 class="text-3xl sm:text-4xl font-title font-extrabold tracking-widest mb-6 text-default">SOURCE CODE</h2>
+            <p class="text-gray-300 mb-6 text-center max-w-2xl mx-auto" style="color: var(--text-color); opacity: 0.7;">
+                THE ARDUINO SKETCH USES THE DHT LIBRARY TO READ DATA AND SENDS THE HUMIDITY, CELSIUS, AND FAHRENHEIT READINGS TO THE SERIAL MONITOR EVERY TWO SECONDS.
+            </p>
+
+            <div class="relative">
+                <button
+                    id="copyCodeBtn"
+                    class="absolute top-0 right-0 px-3 py-1 text-xs font-semibold transition duration-300 z-10 bg-default-button hover:opacity-80"
+                    onclick="copyCode()">
+                    COPY CODE
+                </button>
+                <div id="copyMessage" class="absolute top-0 right-24 text-sm opacity-0 transition-opacity duration-300" style="color: var(--text-color);">COPIED!</div>
+
+                <pre class="code-block"><code class="language-cpp" id="projectCode">
+#include "DHT.h" // Include the DHT Sensor library
+
+#define DHTPIN 2       // Digital pin connected to the DHT sensor (e.g., Arduino D2)
+#define DHTTYPE DHT22  // Specify the sensor type: DHT 22 (AM2302)
+
+// Initialize DHT sensor instance
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  Serial.begin(9600); // Initialize serial communication at 9600 bits per second
+  Serial.println("DHT22 WEATHER STATION INITIATED.");
+  dht.begin(); // Start the DHT sensor
+}
+
+void loop() {
+  // DHT sensor data acquisition is slow, so we wait 2 seconds between readings
+  delay(2000); 
+
+  // Read humidity and temperature (in Celsius) from the sensor
+  float h = dht.readHumidity();
+  float t = dht.readTemperature();
+
+  // --- ERROR CHECKING ---
+  // Check if any reads failed (returns 'NaN' - Not a Number) and handle the error
+  if (isnan(h) || isnan(t)) {
+    Serial.println("!!! FAILED TO READ FROM DHT SENSOR. CHECK WIRING AND POWER. !!!");
+    return; // Exit the loop iteration early
+  }
+
+  // --- DATA CONVERSION ---
+  // Convert Celsius to Fahrenheit using the formula: F = C * 9/5 + 32
+  float f = t * 9.0 / 5.0 + 32.0;
+
+  // --- SERIAL OUTPUT ---
+  Serial.print("HUMIDITY: ");
+  Serial.print(h);
+  Serial.print(" %\t");
+  Serial.print("TEMPERATURE: ");
+  Serial.print(t);
+  Serial.print(" *C / ");
+  Serial.print(f);
+  Serial.println(" *F");
+}
+                </code></pre>
+            </div>
+        </section>
+
+        <!-- Horizontal Rule Separator -->
+        <hr class="hr-separator my-10">
+
+        <!-- VIDEO Section -->
+        <section id="video" class="p-2 sm:p-0">
+            <h2 class="text-3xl sm:text-4xl font-title font-extrabold tracking-widest mb-6 text-default">EXECUTION VIDEO</h2>
+            <p class="text-gray-300 mb-6 text-center max-w-2xl mx-auto" style="color: var(--text-color); opacity: 0.7;">
+                THIS SECTION DEMONSTRATES THE LIVE FUNCTIONALITY: THE DHT22 SENSOR READING DATA AND THE ARDUINO BOARD SENDING REAL-TIME LOGS TO THE SERIAL MONITOR.
+            </p>
+            <div class="video-container">
+                <!-- Placeholder for the Weather Station Video Demonstration -->
+                <iframe
+                    src="weather.mp4"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen
+                    title="DHT22 Weather Station System Demonstration Video"
+                    loading="lazy">
+                </iframe>
+            </div>
+            <p class="mt-6 text-center text-xs" style="color: var(--text-color); opacity: 0.7;">
+                THE FINAL WORKING PROTOTYPE LOGGING DATA.
+            </p>
+        </section>
+
+        <!-- Horizontal Rule Separator -->
+        <hr class="hr-separator my-10">
+
+        <!-- Footer -->
+        <footer class="text-center py-6 text-xs" style="color: var(--text-color); opacity: 0.7;">
+            <p>&copy; 2025 WEATHER STATION SYSTEM PROJECT. DOCUMENTATION FOR ELECTRONICS AND EMBEDDED SYSTEMS.</p>
+        </footer>
+    </div>
+
+    <!-- JavaScript for Theme Toggle and Copy Code functionality -->
+    <script>
+        // Set the initial theme based on localStorage or default to 'dark'
+        function setupTheme() {
+            // Default to dark mode as it fits the initial aesthetic
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.body.setAttribute('data-theme', savedTheme);
+
+            // Set button text initially
+            const currentTheme = document.body.getAttribute('data-theme');
+            const otherTheme = currentTheme === 'light' ? 'DARK' : 'LIGHT';
+            document.getElementById('themeToggleBtn').innerText = currentTheme.toUpperCase() + ' / ' + otherTheme;
+        }
+
+        // Toggle the theme between light and dark and save the preference
+        function toggleTheme() {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            document.getElementById('themeToggleBtn').innerText = newTheme.toUpperCase() + ' / ' + (currentTheme === 'light' ? 'LIGHT' : 'DARK');
+        }
+
+        // JavaScript for the Copy Code button functionality
+        function copyCode() {
+            const codeElement = document.getElementById('projectCode');
+            const codeToCopy = codeElement.innerText;
+            const copyMessage = document.getElementById('copyMessage');
+
+            // Use document.execCommand('copy') for better compatibility in iframe environments
+            try {
+                const textarea = document.createElement('textarea');
+                textarea.value = codeToCopy;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+
+                // Show success message
+                copyMessage.classList.add('opacity-100');
+                setTimeout(() => {
+                    copyMessage.classList.remove('opacity-100');
+                }, 1500);
+
+            } catch (err) {
+                console.error('FAILED TO COPY TEXT: ', err);
+            }
+        }
+
+        // Function to set up smooth scrolling for internal nav links
+        function setupSmoothScrolling() {
+            document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+
+                    if (targetElement) {
+                        // Use smooth behavior for scrolling
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                        // Optionally update URL hash without jumping (for bookmarks/history)
+                        if (history.pushState) {
+                            history.pushState(null, null, targetId);
+                        } else {
+                            window.location.hash = targetId;
+                        }
+                    }
+                });
+            });
+        }
+
+        // Initialize all necessary scripts
+        function init() {
+            setupTheme();
+            setupSmoothScrolling();
+        }
+
+        // Run init on window load
+        window.onload = init;
+    </script>
+</body>
+</html>
